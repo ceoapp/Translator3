@@ -1,27 +1,22 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { decode, decodeAudioData } from "../utils/audio";
 
-// Helper function to lazily initialize the client
-const getClient = () => {
-  // Access VITE_API_KEY using import.meta.env for Vite/Vercel support.
-  // Cast to 'any' to avoid TypeScript errors if types aren't fully configured.
+export const translateText = async (text: string): Promise<string> => {
+  if (!text.trim()) return "";
+
+  // Lazy Initialization: Access key and create client ONLY when function is called.
+  // Using (import.meta as any) to avoid TypeScript errors with VITE_API_KEY
   const apiKey = (import.meta as any).env.VITE_API_KEY;
 
   if (!apiKey) {
     console.error("API Key is missing. Please ensure VITE_API_KEY is set in your Vercel environment variables.");
-    throw new Error("API Key is missing. Please check your configuration.");
+    throw new Error("API Key is missing in Vercel environment variables");
   }
-  
-  return new GoogleGenAI({ apiKey });
-};
 
-export const translateText = async (text: string): Promise<string> => {
-  if (!text.trim()) return "";
+  // Initialize inside the function
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
-    // Initialize inside the function (Lazy Initialization)
-    const ai = getClient();
-    
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Translate the following English text to Thai. Only provide the translated text without any explanations or additional formatting. Text: "${text}"`,
@@ -33,17 +28,25 @@ export const translateText = async (text: string): Promise<string> => {
     return response.text || "";
   } catch (error) {
     console.error("Translation error:", error);
-    throw error; // Rethrow so the UI can handle the error state
+    throw error;
   }
 };
 
 export const generateSpeech = async (text: string): Promise<AudioBuffer> => {
   if (!text.trim()) throw new Error("No text to speak");
 
-  try {
-    // Initialize inside the function (Lazy Initialization)
-    const ai = getClient();
+  // Lazy Initialization: Access key and create client ONLY when function is called.
+  const apiKey = (import.meta as any).env.VITE_API_KEY;
 
+  if (!apiKey) {
+    console.error("API Key is missing. Please ensure VITE_API_KEY is set in your Vercel environment variables.");
+    throw new Error("API Key is missing in Vercel environment variables");
+  }
+
+  // Initialize inside the function
+  const ai = new GoogleGenAI({ apiKey });
+
+  try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: text }] }],
@@ -51,7 +54,7 @@ export const generateSpeech = async (text: string): Promise<AudioBuffer> => {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' }, // 'Kore' is usually a good default
+            prebuiltVoiceConfig: { voiceName: 'Kore' },
           },
         },
       },
@@ -73,6 +76,6 @@ export const generateSpeech = async (text: string): Promise<AudioBuffer> => {
 
   } catch (error) {
     console.error("TTS error:", error);
-    throw error; // Rethrow so the UI can handle the error state
+    throw error;
   }
 };
