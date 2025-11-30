@@ -1,8 +1,7 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { decode, decodeAudioData } from "../utils/audio";
 
-// Initialize the client with the API key from process.env.
-// We assume process.env.API_KEY is defined and valid as per application guidelines.
+// Initialize the client using process.env.API_KEY as per guidelines.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const translateText = async (text: string): Promise<string> => {
@@ -20,7 +19,7 @@ export const translateText = async (text: string): Promise<string> => {
     return response.text || "";
   } catch (error) {
     console.error("Translation error:", error);
-    throw new Error("Failed to translate text. Please check your connection and API key.");
+    throw new Error("Failed to translate text. Please check your connection.");
   }
 };
 
@@ -47,14 +46,11 @@ export const generateSpeech = async (text: string): Promise<AudioBuffer> => {
       throw new Error("No audio data received from model");
     }
 
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    const audioContext = new AudioContextClass({ sampleRate: 24000 });
+    
     const audioBytes = decode(base64Audio);
     const audioBuffer = await decodeAudioData(audioBytes, audioContext);
-    
-    // Clean up context state if needed, though we usually keep context alive or let GC handle it if not playing immediately
-    // For this helper, we return the buffer so the UI can play it.
-    // Note: The context used to decode must be compatible or we might need to recreate it. 
-    // Ideally, we share a context, but for simplicity here we create one for decoding.
     
     return audioBuffer;
 
