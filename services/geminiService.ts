@@ -1,13 +1,19 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { decode, decodeAudioData } from "../utils/audio";
 
-// Initialize the client using process.env.API_KEY as per guidelines.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper function to lazily initialize the client
+const getClient = () => {
+  // Use process.env.API_KEY as required by guidelines and to avoid import.meta errors
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+};
 
 export const translateText = async (text: string): Promise<string> => {
   if (!text.trim()) return "";
 
   try {
+    // Initialize inside the function (Lazy Initialization)
+    const ai = getClient();
+    
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
       contents: `Translate the following English text to Thai. Only provide the translated text without any explanations or additional formatting. Text: "${text}"`,
@@ -27,6 +33,9 @@ export const generateSpeech = async (text: string): Promise<AudioBuffer> => {
   if (!text.trim()) throw new Error("No text to speak");
 
   try {
+    // Initialize inside the function (Lazy Initialization)
+    const ai = getClient();
+
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text: text }] }],
