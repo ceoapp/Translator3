@@ -1,0 +1,7 @@
+{
+  "name": "Translate3",
+  "description": "A high-performance English to Thai translation application powered by Google Gemini, featuring natural text-to-speech capabilities.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
