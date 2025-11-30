@@ -1,10 +1,9 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { decode, decodeAudioData } from "../utils/audio";
 
-const API_KEY = process.env.API_KEY || '';
-
-// Initialize the client once if possible, or per request if key might change (here assume static env)
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// Initialize the client with the API key from process.env.
+// We assume process.env.API_KEY is defined and valid as per application guidelines.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const translateText = async (text: string): Promise<string> => {
   if (!text.trim()) return "";
