@@ -3,8 +3,16 @@ import { decode, decodeAudioData } from "../utils/audio";
 
 // Helper function to lazily initialize the client
 const getClient = () => {
-  // Use process.env.API_KEY as required by guidelines and to avoid import.meta errors
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Access VITE_API_KEY using import.meta.env for Vite/Vercel support.
+  // Cast to 'any' to avoid TypeScript errors if types aren't fully configured.
+  const apiKey = (import.meta as any).env.VITE_API_KEY;
+
+  if (!apiKey) {
+    console.error("API Key is missing. Please ensure VITE_API_KEY is set in your Vercel environment variables.");
+    throw new Error("API Key is missing. Please check your configuration.");
+  }
+  
+  return new GoogleGenAI({ apiKey });
 };
 
 export const translateText = async (text: string): Promise<string> => {
@@ -25,7 +33,7 @@ export const translateText = async (text: string): Promise<string> => {
     return response.text || "";
   } catch (error) {
     console.error("Translation error:", error);
-    throw new Error("Failed to translate text. Please check your connection.");
+    throw error; // Rethrow so the UI can handle the error state
   }
 };
 
@@ -65,6 +73,6 @@ export const generateSpeech = async (text: string): Promise<AudioBuffer> => {
 
   } catch (error) {
     console.error("TTS error:", error);
-    throw new Error("Failed to generate speech.");
+    throw error; // Rethrow so the UI can handle the error state
   }
 };
